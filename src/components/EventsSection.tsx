@@ -12,8 +12,10 @@ import lifeOfWordsImg from '../assets/life_of_words.png';
 import protoPitchImg from '../assets/protopitch.png';
 import { useState, useRef } from 'react';
 import { Sparkles, Code, Users, Cpu, Award, Camera, Palette, Feather } from 'lucide-react';
+import './EventsSection.css'; // Import the Custom CSS
 
 type EventCategory = 'All' | 'Technical' | 'Workshops' | 'Online';
+type GridSize = 'standard' | 'wide' | 'tall' | 'big';
 
 interface Event {
   id: number | string;
@@ -24,6 +26,7 @@ interface Event {
   description: string;
   aiRecommended?: boolean;
   icon: typeof Code;
+  size?: GridSize; // New property for Bento Grid
 }
 
 interface EventCardProps {
@@ -35,21 +38,18 @@ interface EventCardProps {
 
 function EventCard({ event, index, onEventSelect, onConferenceSelect }: EventCardProps) {
   const ref = useRef(null);
-  const isInView = useInView(ref, {
-    margin: "-50% 0px -50% 0px", // Trigger when center of element hits center of viewport
-  });
 
-  // Simple mobile detection
-  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+  // Map size prop to CSS class
+  const sizeClass = event.size ? `span-${event.size}` : '';
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      transition={{ duration: 0.5, delay: index * 0.05 }}
       viewport={{ once: true }}
-      className="group relative cursor-pointer"
+      className={`event-card ${sizeClass}`}
       onClick={() => {
         if (event.id === 'conference') {
           onConferenceSelect();
@@ -58,75 +58,28 @@ function EventCard({ event, index, onEventSelect, onConferenceSelect }: EventCar
         }
       }}
     >
-      {/* AI Recommended Badge */}
-      {event.aiRecommended && (
-        <div className="absolute -top-3 -right-3 z-20">
-          <div className="bg-gradient-to-r from-[#7000FF] to-[#9000FF] px-4 py-2 rounded-full border-2 border-[#7000FF] shadow-lg shadow-[#7000FF]/50 flex items-center gap-2 neon-glow">
-            <Sparkles className="w-4 h-4 text-white" />
-            <span className="text-white text-sm" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-              AI Pick
-            </span>
-          </div>
-        </div>
-      )}
+      {/* Image */}
+      <img
+        src={event.image}
+        alt={event.title}
+        className="card-img"
+        loading="lazy"
+      />
 
-      {/* Folder-Style Card */}
-      <div className="relative h-[450px] rounded-2xl overflow-hidden">
-        {/* Tab/Folder Cutout - Bottom Right Corner */}
-        <div
-          className="absolute inset-0 overflow-hidden"
-          style={{
-            clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%)',
-          }}
-        >
-          {/* Event Image */}
-          <img
-            src={event.image}
-            alt={event.title}
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-
-          {/* Black Overlay - Expands on Hover (Desktop) or Center View (Mobile) */}
-          <div
-            className={`absolute inset-0 bg-black/95 transition-transform duration-500 ease-out flex items-center justify-center p-8
-              ${(isMobile && isInView) ? 'translate-y-0' : 'translate-y-full'} 
-              group-hover:translate-y-0`}
-          >
-            <div className="text-center">
-              <event.icon className="w-12 h-12 text-[#D500F9] mx-auto mb-4" />
-              <h3
-                className="text-3xl mb-4 text-white"
-                style={{ fontFamily: 'VT323, monospace' }}
-              >
-                {event.title}
-              </h3>
-              <p className="text-[#94A3B8] text-lg">{event.description}</p>
-            </div>
-          </div>
-
-          {/* Border Effect */}
-          <div className={`absolute inset-0 border-2 rounded-2xl pointer-events-none transition-all duration-300 ${event.aiRecommended
-            ? 'border-[#7000FF]/50 group-hover:border-[#D500F9]/80'
-            : 'border-[#D500F9]/30 group-hover:border-[#D500F9]/80'
-            }`}
-            style={{
-              clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%)',
-            }}
-          />
-        </div>
-
-        {/* Folder Tab Corner */}
-        <div
-          className="absolute bottom-0 right-0 w-12 h-12 bg-[#D500F9]/20 border-t-2 border-l-2 border-[#D500F9]/30"
-          style={{
-            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-          }}
-        />
+      {/* Hover Overlay */}
+      <div className="absolute inset-0 bg-black/95 translate-y-full hover:translate-y-0 transition-transform duration-300 ease-out flex flex-col items-center justify-center p-6 text-center z-20 group-hover:translate-y-0"
+        style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <event.icon className="w-10 h-10 text-[#D2FF00] mb-3" />
+        <h3 className="text-2xl text-white mb-2" style={{ fontFamily: 'VT323, monospace' }}>{event.title}</h3>
+        <p className="text-gray-400 text-sm">{event.description}</p>
       </div>
+
+      {/* The Magic Cutout (Bottom Right) */}
+      <div className="corner-cutout z-30">
+        <span className="event-title">{event.title}</span>
+        <span className="event-status">{event.category}</span>
+      </div>
+
     </motion.div>
   );
 }
@@ -140,9 +93,6 @@ export function EventsSection({ onEventSelect, onConferenceSelect }: EventsSecti
   const [activeFilter, setActiveFilter] = useState<EventCategory>('All');
 
   const events: Event[] = [
-
-
-
     {
       id: 7,
       title: 'Prompt Pixel',
@@ -153,13 +103,13 @@ export function EventsSection({ onEventSelect, onConferenceSelect }: EventsSecti
       icon: Sparkles,
     },
     {
-      id: 8,
-      title: 'Podcast Monologue',
+      id: 11,
+      title: 'Logic Rush',
       category: 'Technical',
       date: 'Jan 16, 2026',
-      image: podcastMonologueImg,
-      description: 'Spontaneous speaking on random tech topics',
-      icon: Users,
+      image: logicRushImg,
+      description: 'Fast-paced aptitude and logic battle',
+      icon: Cpu,
     },
     {
       id: 9,
@@ -180,13 +130,13 @@ export function EventsSection({ onEventSelect, onConferenceSelect }: EventsSecti
       icon: Users,
     },
     {
-      id: 11,
-      title: 'Logic Rush',
+      id: 8,
+      title: 'Podcast Monologue',
       category: 'Technical',
       date: 'Jan 16, 2026',
-      image: logicRushImg,
-      description: 'Fast-paced aptitude and logic battle',
-      icon: Cpu,
+      image: podcastMonologueImg,
+      description: 'Spontaneous speaking on random tech topics',
+      icon: Users,
     },
     {
       id: 12,
@@ -208,16 +158,16 @@ export function EventsSection({ onEventSelect, onConferenceSelect }: EventsSecti
     },
     {
       id: 14,
-      title: 'Life of Words (Poetry)',
+      title: 'Life of Words',
       category: 'Online',
       date: 'Jan 17, 2026',
       image: lifeOfWordsImg,
       description: 'Craft and share original poems',
-      icon: Feather, // Using Feather for writing/poetry
+      icon: Feather,
     },
     {
       id: 15,
-      title: 'Exposure (Photography)',
+      title: 'Exposure',
       category: 'Online',
       date: 'Jan 17, 2026',
       image: exposureImg,
@@ -251,10 +201,12 @@ export function EventsSection({ onEventSelect, onConferenceSelect }: EventsSecti
   const filters: EventCategory[] = ['All', 'Technical', 'Workshops', 'Online'];
 
   return (
-    <div className="py-20 relative overflow-hidden">
-      {/* Background */}
+    <div className="py-20 relative overflow-hidden bg-[#050505]">
+      {/* Background - Kept minimal to ensure cutout trick works */}
       <div className="absolute inset-0 bg-[#050505]" />
-      <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-[#D500F9]/5 rounded-full blur-3xl" />
+
+      {/* Subtle Background Elements - Reduced opacity to prevent cutout issues */}
+      <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-[#D500F9]/5 rounded-full blur-3xl opacity-50" />
 
       {/* Side Banner Watermark - Left */}
       <div
@@ -262,25 +214,6 @@ export function EventsSection({ onEventSelect, onConferenceSelect }: EventsSecti
         style={{
           writingMode: 'vertical-rl',
           transform: 'translateY(-50%) rotate(180deg)',
-        }}
-      >
-        <span
-          className="text-9xl opacity-15"
-          style={{
-            fontFamily: 'VT323, monospace',
-            WebkitTextStroke: '2px rgba(213, 0, 249, 0.3)',
-            color: 'transparent',
-          }}
-        >
-          MAGNUS 2026
-        </span>
-      </div>
-
-      {/* Side Banner Watermark - Right */}
-      <div
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-0 pointer-events-none"
-        style={{
-          writingMode: 'vertical-rl',
         }}
       >
         <span
@@ -336,8 +269,8 @@ export function EventsSection({ onEventSelect, onConferenceSelect }: EventsSecti
           ))}
         </motion.div>
 
-        {/* Events Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* BENTO GRID */}
+        <div className="magnus-grid">
           {filteredEvents.map((event, index) => (
             <EventCard
               key={event.id}
